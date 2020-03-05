@@ -1,27 +1,43 @@
 kind: pipeline
-type: docker 
 name: default
 
-steps:
- 
-  
-  #- name: install-dependencies
-   # image: node
-    #commands:
-     # - npm install
+volumes:
+  - name: cache
+    host:
+      path: /tmp/drone/cache
 
-  - name: tests
+steps:
+  - name: restore-cache
+    image: drillster/drone-volume-cache
+    settings:
+      restore: true
+      mount:
+        - ./node_modules
+    volumes:
+      - name: cache
+        path: /cache
+   
+  - name: install-dependencies
+    image: node
+    commands:
+      - npm install
+   
+  - name: save-cache
+    image: drillster/drone-volume-cache
+    settings:
+      rebuild: true
+      mount:
+       - ./node_modules
+    volumes:
+      - name: cache
+        path: /cache
+
+  - name: test-unit
     image: node
     commands:
       - npm run test
 
-  - name: build test image
-    image: plugins/docker
-    volumes:
-      - name: docker_sock
-        path: /var/run/docker.sock
-    commands:
-      - echo ${DRONE_COMMIT} 
+  
   - name: slack
     image: plugins/slack
     settings:
@@ -32,13 +48,13 @@ steps:
         {{#success build.status}}
           Build {{build.number}} on ${DRONE_BRANCH} succeeded 🚀
 
-          **Commit**: ${DRONE_COMMIT_MESSAGE}  - ${DRONE_COMMIT_AUTHOR}
+          Commit: ${DRONE_COMMIT_MESSAGE}  - ${DRONE_COMMIT_AUTHOR}
           ${DRONE_COMMIT_LINK}
           
           Good job 💪.
         {{else}}
           Build {{build.number}} on ${DRONE_BRANCH} failed 😱 
-          **Commit**: ${DRONE_COMMIT_MESSAGE}  - ${DRONE_COMMIT_AUTHOR}
+          Commit: ${DRONE_COMMIT_MESSAGE}  - ${DRONE_COMMIT_AUTHOR}
           ${DRONE_COMMIT_LINK} 
 
           Following steps have failed: ${DRONE_FAILED_STAGES}
