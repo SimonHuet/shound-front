@@ -9,7 +9,7 @@ steps:
       webhook: 
         from_secret: slack-hook
       channel: dev-status
-      template:
+      template: >
         {{#success build.status}}
           Build {{build.number}} succeeded 🚀. Good job 💪.
         {{else}}
