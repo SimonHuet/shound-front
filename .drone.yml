@@ -5,10 +5,10 @@ name: default
 steps:
  
   
-  - name: install-dependencies
-    image: node
-    commands:
-      - npm install
+  #- name: install-dependencies
+   # image: node
+    #commands:
+     # - npm install
 
   - name: tests
     image: node
@@ -32,13 +32,13 @@ steps:
         {{#success build.status}}
           Build {{build.number}} on ${DRONE_BRANCH} succeeded 🚀
 
-          Commit: ${DRONE_COMMIT_MESSAGE}  - ${DRONE_COMMIT_AUTHOR}
+          **Commit**: ${DRONE_COMMIT_MESSAGE}  - ${DRONE_COMMIT_AUTHOR}
           ${DRONE_COMMIT_LINK}
           
           Good job 💪.
         {{else}}
           Build {{build.number}} on ${DRONE_BRANCH} failed 😱 
-          Commit: ${DRONE_COMMIT_MESSAGE}  - ${DRONE_COMMIT_AUTHOR}
+          **Commit**: ${DRONE_COMMIT_MESSAGE}  - ${DRONE_COMMIT_AUTHOR}
           ${DRONE_COMMIT_LINK} 
 
           Following steps have failed: ${DRONE_FAILED_STAGES}
