@@ -3,19 +3,8 @@ type: docker
 name: default
 
 steps:
-  - name: slack
-    image: plugins/slack
-    settings:
-      webhook: 
-        from_secret: slack-hook
-      channel: dev-status
-      template: >
-        {{#success build.status}}
-          Build {{build.number}} succeeded 🚀. Good job 💪.
-        {{else}}
-          Build {{build.number}} failed 😱. Fix me please 💉.
-        {{/success}}
-        
+ 
+  
   - name: install-dependencies
     image: node
     commands:
@@ -33,4 +22,26 @@ steps:
         path: /var/run/docker.sock
     commands:
       - echo ${DRONE_COMMIT} 
-  
+  - name: slack
+    image: plugins/slack
+    settings:
+      webhook: 
+        from_secret: slack-hook
+      channel: dev-status
+      template: >
+        {{#success build.status}}
+          Build {{build.number}} on ${DRONE_BRANCH} succeeded 🚀
+
+          Commit: ${DRONE_COMMIT_MESSAGE}  - ${DRONE_COMMIT_AUTHOR}
+          ${DRONE_COMMIT_LINK}
+          
+          Good job 💪.
+        {{else}}
+          Build {{build.number}} on ${DRONE_BRANCH} failed 😱 
+          Commit: ${DRONE_COMMIT_MESSAGE}  - ${DRONE_COMMIT_AUTHOR}
+          ${DRONE_COMMIT_LINK} 
+
+          Following steps have failed: ${DRONE_FAILED_STAGES}
+          
+          Fix me please 💉.
+        {{/success}}
