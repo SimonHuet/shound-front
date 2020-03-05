@@ -10,10 +10,10 @@ steps:
       - npm run test
 
   - name: build test image
-    image: docker:latest
+    image: plugins/docker
     volumes:
       - name: docker_sock
         path: /var/run/docker.sock
     commands:
-      - docker build --no-cache -t shound-front:${DRONE_COMMIT} .
+      - echo ${DRONE_COMMIT} 
   
