@@ -3,10 +3,27 @@ type: docker
 name: default
 
 steps:
-  - name: tests
+  - name: slack
+    image: plugins/slack
+    settings:
+      webhook: 
+        from_secret: slack-hook
+      channel: dev-status
+      template:
+        {{#success build.status}}
+          Build {{build.number}} succeeded 🚀. Good job 💪.
+        {{else}}
+          Build {{build.number}} failed 😱. Fix me please 💉.
+        {{/success}}
+        
+  - name: install-dependencies
     image: node
     commands:
       - npm install
+
+  - name: tests
+    image: node
+    commands:
       - npm run test
 
   - name: build test image
