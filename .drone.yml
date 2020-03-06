@@ -16,13 +16,17 @@
         link_names: true
         template: >
           {{#if build.pull }}
-            *Build started on {{ uppercasefirst repo.name}}*: {{ repo.owner }}/{{ repo.name }} - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>
+            *Build started on {{ uppercasefirst repo.name}}* ({{ repo.owner }}/{{ repo.name }}) - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>
           {{else}}
-            *Build started {{ uppercasefirst repo.name}} : {{ repo.owner }}/{{ repo.name }} - Build #{{ build.number }}* (type: `{{ build.event }}`)
+            *Build started on {{ uppercasefirst repo.name}} ({{ repo.owner }}/{{ repo.name }}) - Build #{{ build.number }}* (type: `{{ build.event }}`)
           {{/if}}
+          
           Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>
+          
           Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
+          
           Author: {{ build.author }}
+          
           <{{ build.link }}|Visit build page 👁>
 
 ---
@@ -47,6 +51,10 @@ steps:
       event:
         exclude:
           - tags
+      branch:
+        exclude:
+          - master
+          - develop
 
   - name: build-docker-image-master
     image: plugins/docker
@@ -106,7 +114,14 @@ steps:
   - name: test-unit
     image: node
     commands:
-      - npm run test
+      - npm run test-unit
+    depends_on: install-dependencies
+  
+  - name: test
+    image: node
+    commands:
+      - npm run test-end-to-end
+    depends_on: install-dependencies
 
 ---
 kind: pipeline
@@ -123,14 +138,18 @@ steps:
       link_names: true
       template: >
         {{#if build.pull }}
-          *{{#success build.status}}✔{{ else }}✘{{/success}} {{ uppercasefirst build.status }}*: {{ repo.owner }}/{{ repo.name }} - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>
+          *{{#success build.status}}🎉{{ else }}❌{{/success}} {{ uppercasefirst build.status }}*: {{ repo.owner }}/{{ repo.name }} - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>
         {{else}}
-          *{{#success build.status}}✔{{ else }}✘{{/success}} {{ uppercasefirst build.status }}: {{ repo.owner }}/{{ repo.name }} - Build #{{ build.number }}* (type: `{{ build.event }}`)
+          *{{#success build.status}}🎉{{ else }}❌{{/success}} {{ uppercasefirst build.status }}: {{ repo.owner }}/{{ repo.name }} - Build #{{ build.number }}* (type: `{{ build.event }}`)
         {{/if}}
         Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>
+
         Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
+
         Author: {{ build.author }}
+
         Duration: {{ since build.created }}
+
         <{{ build.link }}|Visit build page 👁>
 
 depends_on:
