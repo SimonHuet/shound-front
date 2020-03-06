@@ -20,15 +20,23 @@
           {{else}}
             *Build started on {{ uppercasefirst repo.name}} ({{ repo.owner }}/{{ repo.name }}) - Build #{{ build.number }}* (type: `{{ build.event }}`)
           {{/if}}
-          
-          Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>
-          
+          Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>          
           Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
-          
           Author: {{ build.author }}
-          
           <{{ build.link }}|Visit build page 👁>
+#
+#---
+#kind: pipeline
+#name: code-check
 
+#steps:
+#  - name: code-analysis
+#    image: aosapps/drone-sonar-plugin
+#    settings:
+#      sonar_host:
+#        from_secret: SONAR_HOST
+#      sonar_token:
+#        from_secret: SONAR_TOKEN
 ---
 kind: pipeline
 name: build-docker-image
@@ -124,6 +132,28 @@ steps:
     depends_on: install-dependencies
 
 ---
+kind: pipeline 
+type: ssh
+name: deploy
+
+steps:
+  - name: deploy
+    commands :
+      - docker pull ${DRONE_SOURCE_BRANCH/\//-}
+      - docker ps
+   # when:
+    #  branch:
+     #   - master
+
+server:
+  host: 
+    from_secret: DEPLOY_HOST_IP
+  user: 
+    from_secret: DEPLOY_HOST_USER
+  password:
+    from_secret: DEPLOY_HOST_PASSWORD
+
+---
 kind: pipeline
 name: Slack notify for pipeline end
 
@@ -143,13 +173,9 @@ steps:
           *{{#success build.status}}🎉{{ else }}❌{{/success}} {{ uppercasefirst build.status }}: {{ repo.owner }}/{{ repo.name }} - Build #{{ build.number }}* (type: `{{ build.event }}`)
         {{/if}}
         Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>
-
         Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
-
         Author: {{ build.author }}
-
         Duration: {{ since build.created }}
-
         <{{ build.link }}|Visit build page 👁>
 
 depends_on:
