@@ -1,29 +1,29 @@
 ---
   kind: pipeline
-  name: Slack notify for pipeline start
+  name: notify-slack-pipeline-start
   
   clone: 
     disable: true
+steps:
+  - name: slack
+    image: plugins/slack
+    settings:
+      webhook:
+        from_secret: SLACK_WEBHOOK
+      channel: 
+        from_secret: SLACK_CHANNEL
+      link_names: true
+      template: >
+        {{#if build.pull }}
+          *Build started on {{ uppercasefirst repo.name}}* ({{ repo.owner }}/{{ repo.name }}) - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>
+        {{else}}
+          *Build started on {{ uppercasefirst repo.name}} ({{ repo.owner }}/{{ repo.name }}) - Build #{{ build.number }}* (type: `{{ build.event }}`)
+        {{/if}}
+        Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>          
+        Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
+        Author: {{ build.author }}
+        <{{ build.link }}|Visit build page 👁>
 
-  steps:
-    - name: slack
-      image: plugins/slack
-      settings:
-        webhook:
-          from_secret: SLACK_WEBHOOK
-        channel: 
-          from_secret: SLACK_CHANNEL
-        link_names: true
-        template: >
-          {{#if build.pull }}
-            *Build started on {{ uppercasefirst repo.name}}* ({{ repo.owner }}/{{ repo.name }}) - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>
-          {{else}}
-            *Build started on {{ uppercasefirst repo.name}} ({{ repo.owner }}/{{ repo.name }}) - Build #{{ build.number }}* (type: `{{ build.event }}`)
-          {{/if}}
-          Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>          
-          Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
-          Author: {{ build.author }}
-          <{{ build.link }}|Visit build page 👁>
 #
 #---
 #kind: pipeline
@@ -37,6 +37,7 @@
 #        from_secret: SONAR_HOST
 #      sonar_token:
 #        from_secret: SONAR_TOKEN
+
 ---
 kind: pipeline
 name: build-docker-image
