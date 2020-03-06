@@ -1,6 +1,6 @@
 ---
 kind: pipeline
-name: default
+name: Tests
 
 volumes:
   - name: cache

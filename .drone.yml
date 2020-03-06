@@ -43,3 +43,44 @@ steps:
       event:
         exclude:
           - tag
+
+---
+kind: pipeline
+name: Tests
+
+volumes:
+  - name: cache
+    host:
+      path: /tmp/drone/cache
+
+steps:
+  - name: restore-cache
+    image: drillster/drone-volume-cache
+    settings:
+      restore: true
+      mount:
+        - ./node_modules
+    volumes:
+      - name: cache
+        path: /cache
+   
+  - name: install-dependencies
+    image: node
+    commands:
+      - npm install
+   
+  - name: save-cache
+    image: drillster/drone-volume-cache
+    settings:
+      rebuild: true
+      mount:
+       - ./node_modules
+    volumes:
+      - name: cache
+        path: /cache
+  
+  - name: test-unit
+    image: node
+    commands:
+      - npm run test
+
