@@ -1,10 +1,9 @@
 ---
-kind: pipeline
-name: notify-slack-pipeline-start
+  kind: pipeline
+  name: notify-slack-pipeline-start
   
-clone: 
-  disable: true
- 
+  clone: 
+    disable: true
 steps:
   - name: slack
     image: plugins/slack
@@ -13,15 +12,16 @@ steps:
         from_secret: SLACK_WEBHOOK
       channel: 
         from_secret: SLACK_CHANNEL
+      link_names: true
       template: >
         {{#if build.pull }}
           *Build started on {{ uppercasefirst repo.name}}* ({{ repo.owner }}/{{ repo.name }}) - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>
         {{else}}
           *Build started on {{ uppercasefirst repo.name}} ({{ repo.owner }}/{{ repo.name }}) - Build #{{ build.number }}* (type: `{{ build.event }}`)
         {{/if}}
-        Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>      
-        Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}> 
-        Author: {{ build.author }} 
+        Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>          
+        Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
+        Author: {{ build.author }}
         <{{ build.link }}|Visit build page 👁>
 
 ---
@@ -73,7 +73,7 @@ steps:
 
 ---
 kind: pipeline
-name: Tests
+name: tests
 
 volumes:
   - name: cache
@@ -109,29 +109,36 @@ steps:
   - name: test-unit
     image: node
     commands:
-      - npm run test
+      - npm run test-unit
+    depends_on: install-dependencies
+  
+  - name: test
+    image: node
+    commands:
+      - npm run test-end-to-end
+    depends_on: install-dependencies
 
 ---
-kind: pipeline
+kind: pipeline 
+type: ssh
 name: deploy
 
 steps:
   - name: deploy
-    image: appleboy/drone-ssh
-    settings:
-      host: foo.com
-      username: root
-      password: 1234
-      port: 22
-      script:
-        - docker pull ${DRONE_SOURCE_BRANCH/\//-}
-        - echo "Hi"
-
+    commands :
+      - docker pull ${DRONE_SOURCE_BRANCH/\//-}
+      - docker ps
    # when:
     #  branch:
      #   - master
-    depends_on: 
-      - build-docker-image
+
+server:
+  host: 
+    from_secret: DEPLOY_HOST_IP
+  user: 
+    from_secret: DEPLOY_HOST_USER
+  password:
+    from_secret: DEPLOY_HOST_PASSWORD
 
 ---
 kind: pipeline
@@ -145,6 +152,7 @@ steps:
         from_secret: SLACK_WEBHOOK
       channel:
         from_secret: SLACK_CHANNEL
+      link_names: true
       template: >
         {{#if build.pull }}
           *{{#success build.status}}🎉{{ else }}❌{{/success}} {{ uppercasefirst build.status }}*: {{ repo.owner }}/{{ repo.name }} - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>

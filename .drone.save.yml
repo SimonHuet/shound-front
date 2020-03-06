@@ -1,56 +1,4 @@
----
-kind: pipeline
-name: Tests
 
-volumes:
-  - name: cache
-    host:
-      path: /tmp/drone/cache
-
-steps:
-  - name: restore-cache
-    image: drillster/drone-volume-cache
-    settings:
-      restore: true
-      mount:
-        - ./node_modules
-    volumes:
-      - name: cache
-        path: /cache
-   
-  - name: install-dependencies
-    image: node
-    commands:
-      - npm install
-   
-  - name: save-cache
-    image: drillster/drone-volume-cache
-    settings:
-      rebuild: true
-      mount:
-       - ./node_modules
-    volumes:
-      - name: cache
-        path: /cache
-  
-  - name: docker-build  
-    image: plugins/docker
-    settings:
-      repo: 
-        from_secret: docker-repo
-      target: production
-      username: docker-registry-username
-      password: pa55word
-  
-  - name: test-unit
-    image: node
-    commands:
-      - npm run test
-
-  - name: deploy
-    image: node
-    commands:
-      - echo "DEPLOYING"
 
 ---
 
@@ -121,4 +69,33 @@ name: slack-notify
         Following steps have failed: ${DRONE_FAILED_STAGES}
         
         Fix me please 💉.
+
+
+
+
+
+        {{#if build.pull }}
+        *Build started on {{ uppercasefirst repo.name}}* ({{ repo.owner }}/{{ repo.name }}) - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>
+      {{else}}
+        *Build started on {{ uppercasefirst repo.name}} ({{ repo.owner }}/{{ repo.name }}) - Build #{{ build.number }}* (type: `{{ build.event }}`)
+      {{/if}}
+      Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>          
+      Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
+      Author: {{ build.author }}
+      <{{ build.link }}|Visit build page 👁>
+
+
+      #
+#---
+#kind: pipeline
+#name: code-check
+
+#steps:
+#  - name: code-analysis
+#    image: aosapps/drone-sonar-plugin
+#    settings:
+#      sonar_host:
+#        from_secret: SONAR_HOST
+#      sonar_token:
+#        from_secret: SONAR_TOKEN
         
