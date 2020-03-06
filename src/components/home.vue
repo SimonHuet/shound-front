@@ -50,7 +50,7 @@ export default {
   },
   methods:{
   goTodetail(id) {
-    this.$router.push({name:'details',params:{Pid:id}})
+    this.$router.push({name:'orders',params:{Pid:id}})
   }
 }
 }

@@ -2,7 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import home from '@/components/home'
 import ca from '@/components/ca'
-import details from '@/components/details'
+import orders from '@/components/orders'
 
 Vue.use(Router)
 
@@ -24,9 +24,9 @@ export default new Router({
       component: ca
     },
     {
-      path: '/details/:Pid',
-      name: 'details',
-      component: details
+      path: '/orders/:Pid',
+      name: 'orders',
+      component: orders
     }
   ]
 })
