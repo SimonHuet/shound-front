@@ -1,40 +1,44 @@
 ---
   kind: pipeline
-  name: notify-pipeline-start
+  name: Slack notify for pipeline start
   
+  clone: 
+    disable: true
+
   steps:
     - name: slack
       image: plugins/slack
       settings:
         webhook:
-          from_secret: slack-hook
-        channel: dev-status
+          from_secret: SLACK_WEBHOOK
+        channel: 
+          from_secret: SLACK_CHANNEL
         link_names: true
         template: >
           {{#if build.pull }}
-            *Build started*: {{ repo.owner }}/{{ repo.name }} - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>
+            *Build started on {{ uppercasefirst repo.name}}*: {{ repo.owner }}/{{ repo.name }} - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>
           {{else}}
-            *Build started: {{ repo.owner }}/{{ repo.name }} - Build #{{ build.number }}* (type: `{{ build.event }}`)
+            *Build started {{ uppercasefirst repo.name}} : {{ repo.owner }}/{{ repo.name }} - Build #{{ build.number }}* (type: `{{ build.event }}`)
           {{/if}}
           Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>
           Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
           Author: {{ build.author }}
-          <{{ build.link }}|Visit build page ↗>
+          <{{ build.link }}|Visit build page 👁>
 
 ---
 kind: pipeline
 name: build-docker-image
 
 steps:
-  - name: build-docker-image-branch
+  - name: build-docker-build-stage
     image: plugins/docker
     settings:
       repo: ${DRONE_REPO,,}
+      target: build-stage
       tags:
-        - ${DRONE_SOURCE_BRANCH/\//-}
-        - ${DRONE_SOURCE_BRANCH/\//-}-${DRONE_COMMIT_SHA:0:8}
+        - ${DRONE_SOURCE_BRANCH/\//-}-builder
       cache_from:
-        - ${DRONE_REPO,,}:${DRONE_SOURCE_BRANCH/\//-}
+        - ${DRONE_REPO,,}:${DRONE_SOURCE_BRANCH/\//-}-builder
       username:
         from_secret: DOCKER_USERNAME
       password:
@@ -42,11 +46,31 @@ steps:
     when:
       event:
         exclude:
+          - tags
+
+  - name: build-docker-image-master
+    image: plugins/docker
+    settings:
+      repo: ${DRONE_REPO,,}
+      tags:
+        - ${DRONE_SOURCE_BRANCH/\//-}
+      cache_from:
+        - ${DRONE_REPO,,}:${DRONE_SOURCE_BRANCH/\//-}
+      username:
+        from_secret: DOCKER_USERNAME
+      password:
+        from_secret: DOCKER_PASSWORD
+    when:
+      branch:
+        - master
+        - develop
+      event:
+        exclude:
           - tag
 
 ---
 kind: pipeline
-name: Tests
+name: tests
 
 volumes:
   - name: cache
@@ -84,3 +108,36 @@ steps:
     commands:
       - npm run test
 
+---
+kind: pipeline
+name: Slack notify for pipeline end
+
+steps:
+  - name: slack
+    image: plugins/slack
+    settings:
+      webhook:
+        from_secret: SLACK_WEBHOOK
+      channel:
+        from_secret: SLACK_CHANNEL
+      link_names: true
+      template: >
+        {{#if build.pull }}
+          *{{#success build.status}}✔{{ else }}✘{{/success}} {{ uppercasefirst build.status }}*: {{ repo.owner }}/{{ repo.name }} - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>
+        {{else}}
+          *{{#success build.status}}✔{{ else }}✘{{/success}} {{ uppercasefirst build.status }}: {{ repo.owner }}/{{ repo.name }} - Build #{{ build.number }}* (type: `{{ build.event }}`)
+        {{/if}}
+        Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>
+        Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
+        Author: {{ build.author }}
+        Duration: {{ since build.created }}
+        <{{ build.link }}|Visit build page 👁>
+
+depends_on:
+  - build-docker-image
+  - tests
+
+trigger:
+  status:
+    - success
+    - failure
