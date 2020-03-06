@@ -1,3 +1,4 @@
+---
 kind: pipeline
 name: default
 
@@ -31,14 +32,34 @@ steps:
     volumes:
       - name: cache
         path: /cache
-
+  
+  - name: docker-build  
+    image: plugins/docker
+    settings:
+      repo: 
+        from_secret: docker-repo
+      target: production
+      username: docker-registry-username
+      password: pa55word
+  
   - name: test-unit
     image: node
     commands:
       - npm run test
 
+  - name: deploy
+    image: node
+    commands:
+      - echo "DEPLOYING"
+
+---
+
+kind: pipeline
+name: slack-notify
+
   - name: slack
     image: plugins/slack
+    detach: true
     settings:
       webhook: 
         from_secret: slack-hook
@@ -60,9 +81,13 @@ steps:
           
           Fix me please 💉.
         {{/success}}
+
+  
         
   - name: slack-deploy-success
     image: plugins/slack
+    detach: true
+    depends_on: deploy
     when:
       status:
       - success
@@ -80,6 +105,8 @@ steps:
 
   - name: slack-deploy-fail
     image: plugins/slack
+    detach: true
+    depends_on: deploy
     when:
       status:
          failure
