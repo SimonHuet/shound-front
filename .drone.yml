@@ -1,124 +1,45 @@
 ---
-kind: pipeline
-name: default
-
-volumes:
-  - name: cache
-    host:
-      path: /tmp/drone/cache
-
-steps:
-  - name: restore-cache
-    image: drillster/drone-volume-cache
-    settings:
-      restore: true
-      mount:
-        - ./node_modules
-    volumes:
-      - name: cache
-        path: /cache
-   
-  - name: install-dependencies
-    image: node
-    commands:
-      - npm install
-   
-  - name: save-cache
-    image: drillster/drone-volume-cache
-    settings:
-      rebuild: true
-      mount:
-       - ./node_modules
-    volumes:
-      - name: cache
-        path: /cache
+  kind: pipeline
+  name: notify-pipeline-start
   
-  - name: docker-build  
-    image: plugins/docker
-    settings:
-      repo: 
-        from_secret: docker-repo
-      target: production
-      username: docker-registry-username
-      password: pa55word
-  
-  - name: test-unit
-    image: node
-    commands:
-      - npm run test
-
-  - name: deploy
-    image: node
-    commands:
-      - echo "DEPLOYING"
+  steps:
+    - name: slack
+      image: plugins/slack
+      settings:
+        webhook:
+          from_secret: slack-hook
+        channel: dev-status
+        link_names: true
+        template: >
+          {{#if build.pull }}
+            *Build started*: {{ repo.owner }}/{{ repo.name }} - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>
+          {{else}}
+            *Build started: {{ repo.owner }}/{{ repo.name }} - Build #{{ build.number }}* (type: `{{ build.event }}`)
+          {{/if}}
+          Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>
+          Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
+          Author: {{ build.author }}
+          <{{ build.link }}|Visit build page ↗>
 
 ---
-
 kind: pipeline
-name: slack-notify
+name: build-docker-image
 
-  - name: slack
-    image: plugins/slack
-    detach: true
+steps:
+  - name: build-docker-image-branch
+    image: plugins/docker
     settings:
-      webhook: 
-        from_secret: slack-hook
-      channel: dev-status
-      template: >
-        {{#success build.status}}
-          Build {{build.number}} on ${DRONE_BRANCH} succeeded 🚀
-
-          Commit: ${DRONE_COMMIT_MESSAGE} - ${DRONE_COMMIT_AUTHOR}
-          ${DRONE_COMMIT_LINK}
-          
-          Good job 💪.
-        {{else}}
-          Build {{build.number}} on ${DRONE_BRANCH} failed 😱 
-          Commit: ${DRONE_COMMIT_MESSAGE}  - ${DRONE_COMMIT_AUTHOR}
-          ${DRONE_COMMIT_LINK} 
-
-          Following steps have failed: ${DRONE_FAILED_STAGES}
-          
-          Fix me please 💉.
-        {{/success}}
-
-  
-        
-  - name: slack-deploy-success
-    image: plugins/slack
-    detach: true
-    depends_on: deploy
+      repo: ${DRONE_REPO,,}
+      tags:
+        - ${DRONE_SOURCE_BRANCH/\//-}
+        - ${DRONE_SOURCE_BRANCH/\//-}-${DRONE_COMMIT_SHA:0:8}
+      cache_from:
+        - ${DRONE_REPO,,}:${DRONE_SOURCE_BRANCH/\//-}
+      username:
+        from_secret: DOCKER_USERNAME
+      password:
+        from_secret: DOCKER_PASSWORD
     when:
-      status:
-      - success
-    settings:
-      webhook: 
-        from_secret: dev-status
-      channel: shound-changes
-      template: >
-              A new Build as been deployed 🚀
-    
-              Commit: ${DRONE_COMMIT_MESSAGE} - ${DRONE_COMMIT_AUTHOR}
-              ${DRONE_COMMIT_LINK}
-              
-              Good job 💪.
-
-  - name: slack-deploy-fail
-    image: plugins/slack
-    detach: true
-    depends_on: deploy
-    when:
-      status:
-         failure
-    settings:
-      webhook: 
-        from_secret: dev-status
-      channel: dev-status
-      template: >
-        Deploy failed 😱 
-        Requested by: ${DRONE_COMMIT_AUTHOR} 
-            
-        Following steps have failed: ${DRONE_FAILED_STAGES}
-        
-        Fix me please 💉.
-        
+      event:
+        exclude:
+          - tag
