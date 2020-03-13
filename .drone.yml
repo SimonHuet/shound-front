@@ -119,17 +119,17 @@ steps:
   - name: deploy
     image: appleboy/drone-ssh
     settings:
-      host: foo.com
-      username: root
-      password: 1234
+      host: 
+        from_secret: DEPLOY_HOST_IP
+      username: 
+        from_secret: DEPLOY_HOST_USER
+      password: 
+        from_secret: DEPLOY_HOST_PASSWORD
       port: 22
       script:
         - docker pull ${DRONE_SOURCE_BRANCH/\//-}
         - echo "Hi"
-
-   # when:
-    #  branch:
-     #   - master
+        
     depends_on: 
       - build-docker-image
 
