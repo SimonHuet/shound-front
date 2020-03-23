@@ -11,7 +11,6 @@
 						<th scope="col">Date</th>
 						<th scope="col">Quantity</th>
 						<th scope="col">Price</th>
-						<th scope="col">Total</th>
 
 					</tr>
 				</thead>
@@ -23,7 +22,6 @@
 						<td>{{data.date}}</td>
 						<td>{{data.quantity}}</td>
 						<td>{{data.price}}</td>
-						<td>{{data.price*data.quantity}}</td>
 					</tr>
 				</tbody>
 			 </table>
@@ -35,7 +33,17 @@
 </template>
 <script>
 
-	let orders = [];
+	let tableData = [
+		{
+			id: null,
+			name: null,
+			description: null,
+			date: null,
+			quantity: null,
+			price: null
+		}
+
+	];
 
 	export default{ 
 		name:'orders',
@@ -43,19 +51,24 @@
 			return{
 				proId:this.$route.params.Pid,
 				title:"orders",
-				orders: [...orders]
+				orders: [...tableData]
 			}
 		},
 		mounted() {
 			this.$http
-			.get("http://localhost:3000/customers/orders", {
-				params: {
-					id: this.proId
-				}
-			})
+			.get(`http://feature-ci-shound-api.caprover.eddycheval.codes:8080/user-products/${this.proId}/product`)
 			.then(response => {
-				this.orders = response.data;
-				console.log(this.orders);
+				let order = response.data;
+				this.orders[0].id = order.id;
+				this.orders[0].description = order.description;
+				this.orders[0].price = order.price;
+				
+			}),
+			this.$http
+			.get(`http://feature-ci-shound-api.caprover.eddycheval.codes:8080/user-products/${this.proId}`)
+			.then(response => {
+				let userproduct = response.data;
+				this.orders[0].quantity = userproduct.quantity;
 			})
 			.catch(error => {
 				console.log(error);

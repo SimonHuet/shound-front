@@ -5,18 +5,16 @@
     <table class="table">
   <thead>
     <tr>
-      <th scope="col">#</th>
       <th scope="col">Nom</th>
-      <th scope="col">Ville</th>
-      <th scope="col">Total</th>
+      <th scope="col">Prénom</th>
+      <th scope="col">Email</th>
     </tr>
   </thead>
   <tbody>
     <tr v-for="(data,index) in customers" :key="index"  @click="goTodetail(data.id)">
-      <th scope="row">{{data.id}}</th>
-      <td>{{data.name}}</td>
-      <td>{{data.city}}</td>
-      <td>{{data.total}}</td>
+      <td>{{data.firstName}}</td>
+      <td>{{data.lastName}}</td>
+      <td>{{data.email}}</td>
     </tr>
   </tbody>
 </table>
@@ -38,7 +36,7 @@ export default {
   },
   mounted() {
     this.$http
-      .get("http://localhost:3000/customers")
+      .get("http://feature-ci-shound-api.caprover.eddycheval.codes:8080/users")
       .then(response => {
         this.customers = response.data;
         console.log(response.data)
