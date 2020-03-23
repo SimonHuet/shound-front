@@ -73,6 +73,7 @@ steps:
 
 depends_on :
   - notify-slack-pipeline-start
+
 ---
 kind: pipeline
 name: tests
@@ -127,8 +128,11 @@ steps:
       - npm i -g caprover
       - caprover login -u $CAPROVER_URL -p $CAPROVER_PASSWORD -n $CAPROVER_NAME
       - export APP_NAME_LOWERCASE=$(echo $APP_NAME | tr '[:upper:]' '[:lower:]')
-      - CAPROVER_CONFIG_FILE='./config.json' caprover api && echo
-     # - caprover deploy -a $APP_NAME_LOWERCASE-i $DOCKER_REGISTRY:${DRONE_SOURCE_BRANCH/\//-}-builder
+      - echo $APP_NAME_LOWERCASE
+      - if [CAPROVER_CONFIG_FILE='./config.json' caprover api | grep $APP_NAME_LOWERCASE] 
+        then
+          echo "Deploying" && caprover deploy -a $APP_NAME_LOWERCASE -i $DOCKER_REGISTRY:${DRONE_SOURCE_BRANCH/\//-}-builder
+        fi
       - caprover logout
     environment:
       CAPROVER_URL:
@@ -137,7 +141,7 @@ steps:
         from_secret: CAPROVER_PASSWORD
       CAPROVER_NAME:
         from_secret: CAPROVER_NAME
-      APP_NAME: ${DRONE_SOURCE_BRANCH/\//-}-shound-api
+      APP_NAME: ${DRONE_SOURCE_BRANCH/\//-}-shound-front
     branch:
       exclude:
         - master
@@ -199,12 +203,12 @@ steps:
       channel:
         from_secret: SLACK_CHANNEL
       template: >
-        *{{#success build.status}}
-           🎉 Deploy succeed
+        {{#success build.status}}
+          🎉 Deploy succeed
         {{ else }}
           ❌ Deploy Failed
         {{/success}} 
-        {{ uppercasefirst build.status }}*: {{ repo.owner }}/{{ repo.name }}
+        {{ uppercasefirst build.status }}: {{ repo.owner }}/{{ repo.name }}
         
         Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
         Author: {{ build.author }}
