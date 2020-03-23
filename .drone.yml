@@ -118,7 +118,7 @@ depends_on:
 
 ---
 kind: pipeline
-name: deploy-caprover
+name: deploy
 
 steps: 
   - name: deploy-caprover-stage
@@ -127,7 +127,7 @@ steps:
       - npm i -g caprover
       - caprover login -u $CAPROVER_URL -p $CAPROVER_PASSWORD -n $CAPROVER_NAME
       - export APP_NAME_LOWERCASE=$(echo $APP_NAME | tr '[:upper:]' '[:lower:]')
-      - CAPROVER_CONFIG_FILE='./config.json' caprover api
+      - CAPROVER_CONFIG_FILE='./config.json' caprover api && echo
      # - caprover deploy -a $APP_NAME_LOWERCASE-i $DOCKER_REGISTRY:${DRONE_SOURCE_BRANCH/\//-}-builder
       - caprover logout
     environment:
@@ -183,3 +183,37 @@ trigger:
     - success
     - failure
 
+---
+kind: pipeline
+name: notify-slack-deploy
+
+clone: 
+  disable: true
+
+steps:
+  - name: slack
+    image: plugins/slack
+    settings:
+      webhook:
+        from_secret: SLACK_WEBHOOK
+      channel:
+        from_secret: SLACK_CHANNEL
+      template: >
+        *{{#success build.status}}
+           🎉 Deploy succeed
+        {{ else }}
+          ❌ Deploy Failed
+        {{/success}} 
+        {{ uppercasefirst build.status }}*: {{ repo.owner }}/{{ repo.name }}
+        
+        Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
+        Author: {{ build.author }}
+        Duration: {{ since build.created }}
+
+depends_on:
+  - deploy
+
+trigger:
+  status:
+    - success
+    - failure
