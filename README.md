@@ -1,3 +1,4 @@
+[![Build Status](http://drone.eddycheval.codes/api/badges/SimonHuet/shound-front/status.svg)](http://drone.eddycheval.codes/SimonHuet/shound-front)
 > A Vue.js project
 
 ## Build Setup
