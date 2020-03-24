@@ -4,6 +4,9 @@
   <img alt="Version" src="https://img.shields.io/badge/version-1.0.1-blue.svg?cacheSeconds=2592000" />
   <img src="https://img.shields.io/badge/node-%3E%3D%206.0.0-blue.svg" />
   <img src="https://img.shields.io/badge/npm-%3E%3D%203.0.0-blue.svg" />
+  <img alt="SonarQube" src="https://img.shields.io/website?down_color=red&label=SonarQube&url=http%3A%2F%2Fsonarqube.caprover.eddycheval.codes%2F" />
+  <img alt="dashboard" src="https://img.shields.io/website?down_color=red&label=dashboard&url=http%3A%2F%2Fdashboard.eddycheval.codes" />
+  <img alt="caprover" src="https://img.shields.io/website?down_color=red&label=CapRover&url=http%3A%2F%2Fcaptain.caprover.eddycheval.codes%2F" />
   <a href="http://drone.eddycheval.codes/SimonHuet/shound-front"><img src="http://drone.eddycheval.codes/api/badges/SimonHuet/shound-front/status.svg" /></a>
 </p>
 

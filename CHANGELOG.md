@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 1.0.3 (2020-03-24)
+
+
+### Features
+
+* adding badges ([1221688](https://github.com/SimonHuet/shound-front/commit/1221688fb74e8a05f6ba0c27196052363b2ac8cf))
+* Adding changelog pipeline ([#5](https://github.com/SimonHuet/shound-front/issues/5)) ([67f2e91](https://github.com/SimonHuet/shound-front/commit/67f2e917058816db0af5a490d5ec087656fa71bf))
+* update orders page ([e75d13e](https://github.com/SimonHuet/shound-front/commit/e75d13e1943a882822e31ee8a9adf4b8af12dfb5))
+
 ### 1.0.2 (2020-03-24)
 
 
