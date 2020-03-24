@@ -173,6 +173,52 @@ depends_on:
 
 ---
 kind: pipeline
+type: docker
+name: ChangeLog
+
+steps:
+  - name: CHANGELOG-fake
+    image: node:latest
+    commands:
+      - npm i -g standard-version
+      - npm run release -- --release-as patch --skip.commit
+      - git add .
+      - git commit -m "CHANGELOG.md Update [CI SKIP]"
+      - git push origin $DRONE_SOURCE_BRANCH
+    exclude:
+      branch:
+        - master
+        - develop
+
+  - name: CHANGELOG-minor
+    image: node:latest
+    commands:
+      - npm i -g standard-version
+      - npm run release -- --release-as minor --skip.commit
+      - git add .
+      - git commit -m "CHANGELOG.md Update [CI SKIP]"
+      - git push --force origin $DRONE_SOURCE_BRANCH
+    when:
+      branch:
+        - develop
+
+  - name: CHANGELOG-major
+    image: node:latest
+    commands:
+      - npm i -g standard-version
+      - npm run release -- --release-as major --skip.commit
+      - git add .
+      - git commit -m "CHANGELOG.md Update [CI SKIP]"
+      - git push --force origin $DRONE_SOURCE_BRANCH
+    when:
+      branch:
+        - master
+depends_on:
+  - tests
+  - build-docker-image
+
+---
+kind: pipeline
 name: notify-slack-pipeline-end
 
 clone: 
