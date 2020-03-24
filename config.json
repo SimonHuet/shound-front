@@ -1,8 +1,0 @@
-{
-  "caproverName": "main-rover",
-  "path": "/user/apps/appDefinitions",
-  "method": "GET",
-  "data": {
-    "appName":""
-  }
-}
