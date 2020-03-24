@@ -110,6 +110,14 @@ steps:
     image: node
     commands:
       - npm run test
+  
+  - name: code-analysis
+    image: aosapps/drone-sonar-plugin
+    settings:
+      sonar_host:
+        from_secret: SONAR_HOST
+      sonar_token:
+        from_secret: SONAR_TOKEN
 
 depends_on:
   - notify-slack-pipeline-start
