@@ -48,7 +48,6 @@ steps:
       branch:
         exclude:
           - master
-          - develop
 
   - name: build-docker-image-master
     image: plugins/docker
@@ -140,10 +139,11 @@ steps:
       DOCKER_REGISTRY:
         from_secret: DOCKER_REGISTRY
       APP_NAME: ${DRONE_SOURCE_BRANCH/\//-}-shound-front
-    branch:
-      exclude:
-        - master
-        - develop
+    when:
+      branch:
+        exclude:
+          - master
+          - develop
   
   - name: deploy-caprover-develop
     image: node:10-slim
