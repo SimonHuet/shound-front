@@ -1,6 +1,6 @@
 {
   "name": "vue-router",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Vue.js project",
   "author": "hayani said <hayanisaid1995@gmail.com>",
   "private": true,
@@ -10,7 +10,8 @@
     "build": "node build/build.js",
     "lint": "vue-cli-service lint",
     "test-unit": "echo \"Testing another function!!!\"",
-    "test-end-to-end": "echo \"Testing end to end\""
+    "test-end-to-end": "echo \"Testing end to end\"",
+    "release": "standard-version"
   },
   "dependencies": {
     "axios": "^0.19.2",
