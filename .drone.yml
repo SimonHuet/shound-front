@@ -197,18 +197,18 @@ type: docker
 name: ChangeLog
 
 steps:
-  - name: CHANGELOG-fake
-    image: node:latest
-    commands:
-      - npm i -g standard-version
-      - npm run release -- --release-as patch --skip.commit
-      - git add .
-      - git commit -m "CHANGELOG.md Update [CI SKIP]"
-      - git push origin $DRONE_SOURCE_BRANCH
-    exclude:
-      branch:
-        - master
-        - develop
+  #- name: CHANGELOG-fake
+  # image: node:latest
+  #  commands:
+  #    - npm i -g standard-version
+  #   - npm run release -- --release-as patch --skip.commit
+  #    - git add .
+  #   - git commit -m "CHANGELOG.md Update [CI SKIP]"
+  #    - git push origin $DRONE_SOURCE_BRANCH
+  #  exclude:
+  #    branch:
+  #      - master
+  #      - develop
 
   - name: CHANGELOG-minor
     image: node:latest
