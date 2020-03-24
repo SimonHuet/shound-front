@@ -111,7 +111,7 @@ steps:
   - name: test-unit
     image: node
     commands:
-      - npm run test-unit
+      - npm run test
 
 depends_on:
   - notify-slack-pipeline-start
@@ -128,10 +128,7 @@ steps:
       - npm i -g caprover
       - caprover login -u $CAPROVER_URL -p $CAPROVER_PASSWORD -n $CAPROVER_NAME
       - export APP_NAME_LOWERCASE=$(echo $APP_NAME | tr '[:upper:]' '[:lower:]')
-      - echo ${DRONE_SOURCE_BRANCH/\//-}-builder
-      - echo $APP_NAME_LOWERCASE
-      - echo $DOCKER_REGISTRY
-      #- caprover deploy -a $APP_NAME_LOWERCASE -i $DOCKER_REGISTRY:${DRONE_SOURCE_BRANCH/\//-}-builder
+      - caprover deploy -a $APP_NAME_LOWERCASE -i $DOCKER_REGISTRY:${DRONE_SOURCE_BRANCH/\//-}-builder
       - caprover logout
     environment:
       CAPROVER_URL:

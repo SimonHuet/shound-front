@@ -9,7 +9,7 @@
     "start": "npm run dev",
     "build": "node build/build.js",
     "lint": "vue-cli-service lint",
-    "test-unit": "echo \"Testing another function!!!\"",
+    "test": "echo \"Testing another function!!!\"",
     "test-end-to-end": "echo \"Testing end to end\"",
     "release": "standard-version"
   },
