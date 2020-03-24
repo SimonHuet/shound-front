@@ -1,6 +1,6 @@
 {
   "name": "vue-router",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A Vue.js project",
   "author": "hayani said <hayanisaid1995@gmail.com>",
   "private": true,
@@ -9,7 +9,7 @@
     "start": "npm run dev",
     "build": "node build/build.js",
     "lint": "vue-cli-service lint",
-    "test-unit": "echo \"Testing another function!!!\"",
+    "test": "echo \"Testing another function!!!\"",
     "test-end-to-end": "echo \"Testing end to end\"",
     "release": "standard-version"
   },
