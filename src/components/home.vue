@@ -28,24 +28,20 @@
 
 <script>
 
-import definitions from '../definitions/global'
+import global from '../definitions/global.js'
 
 export default {
   name: 'home',
   data () {
     return {
-      // pourquoi pas en dur dans le HTML ?
-      // intérêt d'alimenter un tableau vide avec un tableau vide ?
       customers: []
     }
   },
   mounted () {
     this.$http
-      // Var d'env, ou alors constantes global que tu mets dans un fichier que tu importe
-      .get(definitions.url + "/users")
+      .get(url + "/users")
       .then(response => {
         this.customers = response.data;
-        console.log(response.data)
       })
       .catch(error => {
         console.log(error);

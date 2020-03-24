@@ -36,36 +36,25 @@
 
 // tu n'es pas censé avoir de variable/constantes en dehors de ton objet vue en fait.
 // Ici il n'y a que des imports
-import definitions from '../definitions/global'
+import global from '../definitions/global.js'
 export default {
-  name: 'orders',
   data () {
     return {
       proId: this.$route.params.Pid,
       title: "orders",
-      // pourquoi ne pas directement l'alimenter avec ton contenu de tableData
-      orders: [
-        {
-          id: null,
-          name: null,
-          description: null,
-          date: null,
-          quantity: null,
-          price: null
-        }
-
-      ]
+      orders: []
     }
   },
   mounted () {
 
     Promise.all([
-      this.$http.get(definitions.url + `/user-products/${this.proId}/product`),
-      this.$http.get(definitions.url + `/user-products/${this.proId}`)
+      this.$http.get(url + `/user-products/${this.proId}/product`),
+      this.$http.get(url + `/user-products/${this.proId}`)
     ]).then(responseArray => {
-      let order = { ...responseArray[0], ...responseArray[1] };
-      this.orders.push(order)
-
+      let order = { ...responseArray[0].data, ...responseArray[1].data};
+	  this.orders.push(order);
+	  this.orders[0].date = this.orders[0].date.substring(0, 10);
+	
     }).catch(error => {
       console.log(error);
     });
