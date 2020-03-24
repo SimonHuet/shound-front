@@ -65,7 +65,6 @@ steps:
     when:
       branch:
         - master
-        - develop
       event:
         exclude:
           - tag
