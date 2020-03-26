@@ -11,11 +11,15 @@
         </tr>
       </thead>
       <tbody>
+        <!-- Si tu utilise plusieurs fois un index (1,2,3) en key avec plusieurs v-for dans la même page,
+    tu va avoir des conflit de clé. Essaye de concatété ton index avec une string ('customers' + index par ex )
+     -->
         <tr v-for="(data,index) in customers" :key="'customers' + index" @click="goTodetail(data.id)">
           <td>{{data.firstName}}</td>
           <td>{{data.lastName}}</td>
           <td>{{data.email}}</td>
         </tr>
+
       </tbody>
     </table>
 
@@ -48,7 +52,7 @@ export default {
     goTodetail (id) {
       this.$router.push({ name: 'orders', params: { Pid: id } })
     }
-  }  
+  }
 }
 </script>
 
