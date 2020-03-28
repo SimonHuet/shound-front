@@ -128,7 +128,7 @@ steps:
   - name: test-end-to-end
     image: cypress/base:12.1.0
     commands:
-      - sleep 60
+      - sleep 120
       - mv cypress.ci.json cypress.json
       - npm ci
       - npm run test-end-to-end
