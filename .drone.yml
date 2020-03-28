@@ -120,7 +120,7 @@ steps:
   - name: start
     image: node:latest
     commands:
-      - npm start --host 0.0.0.0
+      - npm start
     detach: true
     depends_on:
       - save-cache
