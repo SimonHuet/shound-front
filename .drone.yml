@@ -122,6 +122,8 @@ steps:
     commands:
       - mv cypress.ci.json cypress.json
       - npm ci
+    depends_on:
+      - save-cache
 
   - name: start
     image: node:latest
