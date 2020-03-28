@@ -120,6 +120,7 @@ steps:
   - name: start
     image: node:latest
     commands:
+      - npm i
       - npm start
     detach: true
     depends_on:
