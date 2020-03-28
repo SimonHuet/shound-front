@@ -122,19 +122,9 @@ steps:
     commands:
       - mv cypress.ci.json cypress.json
       - npm ci
-      - npm start
-    detach: true
+      - npm start & cypress run
     depends_on:
       - save-cache
-
-  - name: test-end-to-end
-    image: cypress/base:12.1.0
-    commands:
-      - ls
-      - sleep 120
-      - node_modules/.bin/cypress run
-    depends_on:
-      - start
   
   - name: code-analysis
     image: aosapps/drone-sonar-plugin
