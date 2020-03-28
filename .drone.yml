@@ -130,7 +130,7 @@ steps:
   - name: test-end-to-end
     image: cypress/base:12.1.0
     commands:
-      - sleep 40
+      - sleep 120
       - npm run test-end-to-end
     depends_on:
       - start
