@@ -120,7 +120,6 @@ steps:
   - name: start
     image: node:latest
     commands:
-      - npm i
       - npm start
     detach: true
     depends_on:
@@ -129,9 +128,9 @@ steps:
   - name: test-end-to-end
     image: cypress/base:12.1.0
     commands:
-      - sleep 120
+      #- sleep 60
       - mv cypress.ci.json cypress.json
-      - npm ci
+      - npm ci --help
       - npm run test-end-to-end
     depends_on:
       - start
