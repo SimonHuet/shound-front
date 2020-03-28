@@ -92,9 +92,11 @@ steps:
         path: /cache
    
   - name: install-dependencies
-    image: node
+    image: node:10-slim
     commands:
       - npm install
+    depends_on:
+      - restore-cache
 
   - name: save-cache
     image: drillster/drone-volume-cache
@@ -105,17 +107,33 @@ steps:
     volumes:
       - name: cache
         path: /cache
+    depends_on:
+      - install-dependencies
 
   - name: test-unit
-    image: node
+    image: node:10-slim
     commands:
       - npm run test --ci
+    depends_on:
+      - install-dependencies
+
+  - name: start
+    image: node:latest
+    commands:
+      - npm start --host 0.0.0.0
+    detach: true
+    depends_on:
+      - save-cache
 
   - name: test-end-to-end
-    image: node
+    image: cypress/base:12.1.0
     commands:
-      - echo "Cypress testing"
-      #- npm run test-end-to-end 
+      - sleep 60
+      - mv cypress.ci.json cypress.json
+      - npm ci
+      - npm run test-end-to-end
+    depends_on:
+      - start
   
   - name: code-analysis
     image: aosapps/drone-sonar-plugin

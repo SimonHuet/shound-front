@@ -1,1 +1,1 @@
-url = 'http://develop-shound-api.caprover.eddycheval.codes'
+url = 'http://shound-api.caprover.eddycheval.codes'
