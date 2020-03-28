@@ -95,7 +95,7 @@ steps:
     image: node
     commands:
       - npm install
-   
+
   - name: save-cache
     image: drillster/drone-volume-cache
     settings:
@@ -105,11 +105,17 @@ steps:
     volumes:
       - name: cache
         path: /cache
-  
+
   - name: test-unit
     image: node
     commands:
-      - npm run test
+      - npm run test --ci
+
+  - name: test-end-to-end
+    image: node
+    commands:
+      - echo "Cypress testing"
+      #- npm run test-end-to-end 
   
   - name: code-analysis
     image: aosapps/drone-sonar-plugin
