@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 1.5.0 (2020-03-28)
+
+
+### Features
+
+* add sonarqube ([#11](https://github.com/SimonHuet/shound-front/issues/11)) ([fe35067](https://github.com/SimonHuet/shound-front/commit/fe350673db76f2622d2175d6606acd973cc95180))
+* adding badges ([#7](https://github.com/SimonHuet/shound-front/issues/7)) ([62c0130](https://github.com/SimonHuet/shound-front/commit/62c01301886b9111237b3d2327c7bdc67dd11e80))
+* Adding changelog pipeline ([#5](https://github.com/SimonHuet/shound-front/issues/5)) ([67f2e91](https://github.com/SimonHuet/shound-front/commit/67f2e917058816db0af5a490d5ec087656fa71bf))
+* update orders page ([e75d13e](https://github.com/SimonHuet/shound-front/commit/e75d13e1943a882822e31ee8a9adf4b8af12dfb5))
+
+
+### Bug Fixes
+
+* comment fake changelog ([#8](https://github.com/SimonHuet/shound-front/issues/8)) ([d5216ff](https://github.com/SimonHuet/shound-front/commit/d5216ff0bf9099cd1c4381285bf69c774f573197))
+* docker build ([#10](https://github.com/SimonHuet/shound-front/issues/10)) ([c7e3b0e](https://github.com/SimonHuet/shound-front/commit/c7e3b0e2dfd2eaa12b254b76771efbce31cea45d))
+* pipeline deploy ([#9](https://github.com/SimonHuet/shound-front/issues/9)) ([b53fb06](https://github.com/SimonHuet/shound-front/commit/b53fb069b4490489c84fcb7f39ad2915bf3896b2))
+
 ## 1.4.0 (2020-03-28)
 
 
