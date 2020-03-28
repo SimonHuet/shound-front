@@ -1,0 +1,332 @@
+---
+kind: pipeline
+name: notify-slack-pipeline-start
+  
+clone: 
+  disable: true
+ 
+steps:
+  - name: slack
+    image: plugins/slack
+    settings:
+      webhook:
+        from_secret: SLACK_WEBHOOK
+      channel: 
+        from_secret: SLACK_CHANNEL
+      template: >
+        {{#if build.pull }}
+          *Build started on {{ uppercasefirst repo.name}}* ({{ repo.owner }}/{{ repo.name }}) - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>
+        {{else}}
+          *Build started on {{ uppercasefirst repo.name}} ({{ repo.owner }}/{{ repo.name }}) - Build #{{ build.number }}* (type: `{{ build.event }}`)
+        {{/if}}
+        Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>      
+        Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}> 
+        Author: {{ build.author }} 
+        <{{ build.link }}|Visit build page 👁>
+
+---
+kind: pipeline
+name: build-docker-image
+
+steps:
+  - name: build-docker-build-stage
+    image: plugins/docker
+    settings:
+      repo: ${DRONE_REPO,,}
+      tags:
+        - ${DRONE_SOURCE_BRANCH/\//-}-builder
+      cache_from:
+        - ${DRONE_REPO,,}:${DRONE_SOURCE_BRANCH/\//-}-builder
+      username:
+        from_secret: DOCKER_USERNAME
+      password:
+        from_secret: DOCKER_PASSWORD
+    when:
+      event:
+        exclude:
+          - tags
+      branch:
+        exclude:
+          - master
+
+  - name: build-docker-image-master
+    image: plugins/docker
+    settings:
+      repo: ${DRONE_REPO,,}
+      tags:
+        - ${DRONE_SOURCE_BRANCH/\//-}
+      cache_from:
+        - ${DRONE_REPO,,}:${DRONE_SOURCE_BRANCH/\//-}
+      username:
+        from_secret: DOCKER_USERNAME
+      password:
+        from_secret: DOCKER_PASSWORD
+    when:
+      branch:
+        - master
+      event:
+        exclude:
+          - tag
+
+depends_on :
+  - notify-slack-pipeline-start
+
+---
+kind: pipeline
+name: tests
+
+volumes:
+  - name: cache
+    host:
+      path: /tmp/drone/cache
+
+steps:
+  - name: restore-cache
+    image: drillster/drone-volume-cache
+    settings:
+      restore: true
+      mount:
+        - ./node_modules
+    volumes:
+      - name: cache
+        path: /cache
+   
+  - name: install-dependencies
+    image: node:10-slim
+    commands:
+      - npm install
+    depends_on:
+      - restore-cache
+
+  - name: save-cache
+    image: drillster/drone-volume-cache
+    settings:
+      rebuild: true
+      mount:
+       - ./node_modules
+    volumes:
+      - name: cache
+        path: /cache
+    depends_on:
+      - install-dependencies
+
+  - name: test-unit
+    image: node:10-slim
+    commands:
+      - npm run test --ci
+    depends_on:
+      - install-dependencies
+
+  - name: start
+    image: cypress/base:12.1.0
+    commands:
+      - mv cypress.ci.json cypress.json
+      - npm ci
+      - npm start & npm run test-end-to-end
+    depends_on:
+      - save-cache
+  
+  - name: code-analysis
+    image: aosapps/drone-sonar-plugin
+    settings:
+      sonar_host:
+        from_secret: SONAR_HOST
+      sonar_token:
+        from_secret: SONAR_TOKEN
+
+depends_on:
+  - notify-slack-pipeline-start
+
+---
+kind: pipeline
+name: deploy
+
+steps: 
+  - name: deploy-caprover-stage
+    image: node:10-slim
+    failure: ignore
+    commands:
+      - npm i -g caprover
+      - caprover login -u $CAPROVER_URL -p $CAPROVER_PASSWORD -n $CAPROVER_NAME
+      - export APP_NAME_LOWERCASE=$(echo $APP_NAME | tr '[:upper:]' '[:lower:]')
+      - caprover deploy -a $APP_NAME_LOWERCASE -i $DOCKER_REGISTRY:${DRONE_SOURCE_BRANCH/\//-}-builder
+      - caprover logout
+    environment:
+      CAPROVER_URL:
+        from_secret: CAPROVER_URL
+      CAPROVER_PASSWORD:
+        from_secret: CAPROVER_PASSWORD
+      CAPROVER_NAME:
+        from_secret: CAPROVER_NAME
+      DOCKER_REGISTRY:
+        from_secret: DOCKER_REGISTRY
+      APP_NAME: ${DRONE_SOURCE_BRANCH/\//-}-shound-front
+    when:
+      branch:
+        exclude:
+          - master
+          - develop
+  
+  - name: deploy-caprover-develop
+    image: node:10-slim
+    commands:
+      - npm i -g caprover
+      - caprover login -u $CAPROVER_URL -p $CAPROVER_PASSWORD -n $CAPROVER_NAME
+      - export APP_NAME_LOWERCASE=$(echo $APP_NAME | tr '[:upper:]' '[:lower:]')
+      - caprover deploy -a $APP_NAME_LOWERCASE -i $DOCKER_REGISTRY:${DRONE_SOURCE_BRANCH/\//-}-builder
+      - caprover logout
+    environment:
+      CAPROVER_URL:
+        from_secret: CAPROVER_URL
+      CAPROVER_PASSWORD:
+        from_secret: CAPROVER_PASSWORD
+      CAPROVER_NAME:
+        from_secret: CAPROVER_NAME
+      DOCKER_REGISTRY:
+        from_secret: DOCKER_REGISTRY
+      APP_NAME: ${DRONE_SOURCE_BRANCH/\//-}-shound-front
+    when:
+      branch:
+        - develop
+
+  - name: deploy-caprover-main
+    image: node:10-slim
+    commands:
+      - npm i -g caprover
+      - caprover login -u $CAPROVER_URL -p $CAPROVER_PASSWORD -n $CAPROVER_NAME
+      - caprover deploy -a shound-api -i $DOCKER_REGISTRY:${DRONE_SOURCE_BRANCH/\//-}
+      - caprover logout
+    environment:
+      CAPROVER_URL:
+        from_secret: CAPROVER_URL
+      CAPROVER_PASSWORD:
+        from_secret: CAPROVER_PASSWORD
+      CAPROVER_NAME:
+        from_secret: CAPROVER_NAME
+      DOCKER_REGISTRY:
+        from_secret: DOCKER_REGISTRY
+    when:
+      branch:
+        - master
+        
+depends_on:
+  - build-docker-image
+  - tests
+
+---
+kind: pipeline
+type: docker
+name: ChangeLog
+
+steps:
+  #- name: CHANGELOG-fake
+  # image: node:latest
+  #  commands:
+  #    - npm i -g standard-version
+  #   - npm run release -- --release-as patch --skip.commit
+  #    - git add .
+  #   - git commit -m "CHANGELOG.md Update [CI SKIP]"
+  #    - git push origin $DRONE_SOURCE_BRANCH
+  #  exclude:
+  #    branch:
+  #      - master
+  #      - develop
+
+  - name: CHANGELOG-minor
+    image: node:latest
+    commands:
+      - npm i -g standard-version
+      - npm run release -- --release-as minor --skip.commit
+      - git add .
+      - git commit -m "CHANGELOG.md Update [CI SKIP]"
+      - git push --force origin $DRONE_SOURCE_BRANCH
+    when:
+      branch:
+        - develop
+
+  - name: CHANGELOG-major
+    image: node:latest
+    commands:
+      - npm i -g standard-version
+      - npm run release -- --release-as major --skip.commit
+      - git add .
+      - git commit -m "CHANGELOG.md Update [CI SKIP]"
+      - git push --force origin $DRONE_SOURCE_BRANCH
+    when:
+      branch:
+        - master
+depends_on:
+  - tests
+  - build-docker-image
+
+---
+kind: pipeline
+name: notify-slack-pipeline-end
+
+clone: 
+  disable: true
+
+steps:
+  - name: slack
+    image: plugins/slack
+    settings:
+      webhook:
+        from_secret: SLACK_WEBHOOK
+      channel:
+        from_secret: SLACK_CHANNEL
+      template: >
+        {{#if build.pull }}
+          *{{#success build.status}}🎉{{ else }}❌{{/success}} {{ uppercasefirst build.status }}*: {{ repo.owner }}/{{ repo.name }} - <https://github.com/{{ repo.owner }}/{{ repo.name }}/pull/{{ build.pull }}|Pull Request #{{ build.pull }}>
+        {{else}}
+          *{{#success build.status}}🎉{{ else }}❌{{/success}} {{ uppercasefirst build.status }}: {{ repo.owner }}/{{ repo.name }} - Build #{{ build.number }}* (type: `{{ build.event }}`)
+        {{/if}}
+        Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>
+        Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
+        Author: {{ build.author }}
+        Duration: {{ since build.created }}
+        <{{ build.link }}|Visit build page 👁>
+
+depends_on:
+  - build-docker-image
+  - tests
+
+trigger:
+  status:
+    - success
+    - failure
+
+---
+kind: pipeline
+name: notify-slack-deploy
+
+clone: 
+  disable: true
+
+steps:
+  - name: slack
+    image: plugins/slack
+    settings:
+      webhook:
+        from_secret: SLACK_WEBHOOK
+      channel:
+        from_secret: SLACK_CHANNEL
+      template: >
+        {{#success build.status}}
+          🎉 Deploy succeed
+        {{ else }}
+          ❌ Deploy Failed
+          Be sure that the app has been created in caprover
+        {{/success}} 
+        {{ uppercasefirst build.status }}: {{ repo.owner }}/{{ repo.name }}
+        
+        Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
+        Author: {{ build.author }}
+        Duration: {{ since build.created }}
+
+depends_on:
+  - deploy
+
+trigger:
+  status:
+    - success
+    - failure
