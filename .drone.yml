@@ -117,20 +117,26 @@ steps:
     depends_on:
       - install-dependencies
 
+  - name: build-cypress
+    image: cypress/base:12.1.0
+    commands:
+      - mv cypress.ci.json cypress.json
+      - npm ci
+    depends_on:
+      - start
+
   - name: start
     image: node:latest
     commands:
       - npm start
     detach: true
     depends_on:
-      - save-cache
+      - build-cypress
 
   - name: test-end-to-end
     image: cypress/base:12.1.0
     commands:
-      #- sleep 60
-      - mv cypress.ci.json cypress.json
-      - npm ci --help
+      - sleep 40
       - npm run test-end-to-end
     depends_on:
       - start
