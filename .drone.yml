@@ -194,7 +194,7 @@ steps:
     commands:
       - npm i -g caprover
       - caprover login -u $CAPROVER_URL -p $CAPROVER_PASSWORD -n $CAPROVER_NAME
-      - caprover deploy -a shound-api -i $DOCKER_REGISTRY:${DRONE_SOURCE_BRANCH/\//-}
+      - caprover deploy -a shound-front -i $DOCKER_REGISTRY:${DRONE_SOURCE_BRANCH/\//-}
       - caprover logout
     environment:
       CAPROVER_URL:
