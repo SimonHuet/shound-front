@@ -5,7 +5,7 @@
       <table class="table">
         <thead>
           <tr>
-            <th scope="col">Product name</th>
+            <th scope="col">Nom du produit</th>
             <th scope="col">Description</th>
             <th scope="col">Date</th>
             <th scope="col">Quantity</th>
@@ -33,8 +33,6 @@
 </template>
 <script>
 
-// tu n'es pas censé avoir de variable/constantes en dehors de ton objet vue en fait.
-// Ici il n'y a que des imports
 import global from '../definitions/global.js'
 import multiplicate from '../functions/multiplicate.js'
 export default {
@@ -55,16 +53,13 @@ export default {
           .get(url + `/products/${order.productId}`)
           .then(response => {
             let productInfo = response.data;
-
             let total = multiplicate(productInfo.price, order.quantity);
-
-            order.date = order.date.substring(0, 10);
             let product = { ...order, ...productInfo, total };
             this.orders.push(product);
             this.orders.splice(0, 1);
           })
         )
-        })
+      })
       .catch(error => {
         console.log(error);
       });
